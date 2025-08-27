@@ -1,6 +1,6 @@
-streamlit[snowflake]
+streamlit
 pandas
-snowflake-snowpark-python
 altair
-matplotlib
-snowflake-connector-python
+snowflake-snowpark-python
+openai
+
