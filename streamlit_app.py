@@ -121,8 +121,9 @@ if user_question:
     prompt = f"Answer this question using the dataset: {user_question} <context>{df_string}</context>"
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500
     )
     st.write(response['choices'][0]['message']['content'])
+
