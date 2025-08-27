@@ -4,13 +4,26 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 from snowflake.snowpark.context import get_active_session
-from snowflake.cortex import complete
+from openai import OpenAI
 
 # -------------------------------
 # Connect to Snowflake
 # -------------------------------
 session = get_active_session()
 df = session.table("reviews_with_sentiment").to_pandas()
+
+# -------------------------------
+# OpenAI Client
+# -------------------------------
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+def complete(prompt):
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",  # or gpt-4o, gpt-4o-mini, gpt-3.5-turbo
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=500
+    )
+    return resp.choices[0].message.content
 
 # -------------------------------
 # App Title and Sidebar Filters
@@ -102,9 +115,5 @@ user_question = st.text_input("Enter your question here:")
 
 if user_question:
     df_string = filtered_df.to_string(index=False)
-    response = complete(
-        model="claude-3-5-sonnet",
-        prompt=f"Answer this question using the dataset: {user_question} <context>{df_string}</context>",
-        session=session
-    )
+    response = complete(f"Answer this question using the dataset: {user_question} <context>{df_string}</context>")
     st.write(response)
