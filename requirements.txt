@@ -1,4 +1,6 @@
 streamlit[snowflake]
 pandas
 snowflake-snowpark-python
+altair
 matplotlib
+snowflake-connector-python
