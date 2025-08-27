@@ -1,29 +1,35 @@
-# Snowflake Streamlit App: Product Intelligence Dashboard
+# Snowflake Streamlit App: Product Intelligence Dashboard with OpenAI Chatbot
 
 import streamlit as st
 import pandas as pd
 import altair as alt
-from snowflake.snowpark.context import get_active_session
-from openai import OpenAI
+from snowflake.snowpark.session import Session
+import openai
 
 # -------------------------------
-# Connect to Snowflake
+# Create Snowpark Session Manually
 # -------------------------------
-session = get_active_session()
+connection_parameters = {
+    "account": st.secrets["connections"]["snowflake"]["account"],
+    "user": st.secrets["connections"]["snowflake"]["user"],
+    "password": st.secrets["connections"]["snowflake"]["password"],
+    "role": st.secrets["connections"]["snowflake"]["role"],
+    "warehouse": st.secrets["connections"]["snowflake"]["warehouse"],
+    "database": st.secrets["connections"]["snowflake"]["database"],
+    "schema": st.secrets["connections"]["snowflake"]["schema"],
+}
+
+session = Session.builder.configs(connection_parameters).create()
+
+# -------------------------------
+# Load Data
+# -------------------------------
 df = session.table("reviews_with_sentiment").to_pandas()
 
 # -------------------------------
-# OpenAI Client
+# OpenAI API Key
 # -------------------------------
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-def complete(prompt):
-    resp = client.chat.completions.create(
-        model="gpt-4o-mini",  # or gpt-4o, gpt-4o-mini, gpt-3.5-turbo
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=500
-    )
-    return resp.choices[0].message.content
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # -------------------------------
 # App Title and Sidebar Filters
@@ -96,9 +102,6 @@ if all(col in filtered_df.columns for col in ["REGION","PRODUCT","STATUS","SENTI
         y=alt.Y('SENTIMENT_SCORE:Q', title="Avg Sentiment Score"),
         color='STATUS:N',
         tooltip=['REGION', 'PRODUCT', 'STATUS', 'SENTIMENT_SCORE']
-    ).properties(
-        width=150,
-        height=150
     )
 
     chart_faceted = base.facet(
@@ -108,12 +111,18 @@ if all(col in filtered_df.columns for col in ["REGION","PRODUCT","STATUS","SENTI
     st.altair_chart(chart_faceted, use_container_width=True)
 
 # -------------------------------
-# Chatbot Assistant
+# Chatbot Assistant Using OpenAI
 # -------------------------------
 st.subheader("Ask Questions About Your Data")
 user_question = st.text_input("Enter your question here:")
 
 if user_question:
     df_string = filtered_df.to_string(index=False)
-    response = complete(f"Answer this question using the dataset: {user_question} <context>{df_string}</context>")
-    st.write(response)
+    prompt = f"Answer this question using the dataset: {user_question} <context>{df_string}</context>"
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=500
+    )
+    st.write(response['choices'][0]['message']['content'])
