@@ -25,11 +25,11 @@ session = Session.builder.configs(connection_parameters).create()
 # Load Data
 # -------------------------------
 df = session.table("reviews_with_sentiment").to_pandas()
-st.write(st.secrets)
+
 # -------------------------------
 # OpenAI API Key
 # -------------------------------
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = st.secrets["connections"]["snowflake"]["OPENAI_API_KEY"]
 
 # -------------------------------
 # App Title and Sidebar Filters
@@ -126,5 +126,6 @@ if user_question:
         max_tokens=500
     )
     st.write(response['choices'][0]['message']['content'])
+
 
 
