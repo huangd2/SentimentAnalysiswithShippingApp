@@ -122,21 +122,26 @@ user_question = st.text_input("Enter your question here:")
 def ask_openai(prompt):
     try:
         response = openai.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o",  # or another available model
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500
         )
         return response.choices[0].message.content
-    except Exception as e:  # catch all OpenAI errors
-        return f"OpenAI API error: {e}"
+    except OpenAIError as e:
+        return f"OpenAI API error: {str(e)}"
 
 if st.button("Ask"):
     if user_question:
-        prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
+        # Summarize dataset before sending to OpenAI
+        if 'PRODUCT' in filtered_df.columns and 'REGION' in filtered_df.columns and 'SENTIMENT_SCORE' in filtered_df.columns:
+            summary_df = filtered_df.groupby(['PRODUCT','REGION'])['SENTIMENT_SCORE'].mean().reset_index()
+            prompt_data = summary_df.to_string(index=False)
+        else:
+            prompt_data = filtered_df.head(20).to_string(index=False)  # fallback: first 20 rows
+
+        prompt = f"Answer this question using the dataset: {user_question} <context>{prompt_data}</context>"
         answer = ask_openai(prompt)
         st.write(answer)
-
-
 
 
 
