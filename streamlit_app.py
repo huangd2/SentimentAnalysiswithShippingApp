@@ -5,6 +5,7 @@ import pandas as pd
 import altair as alt
 from snowflake.snowpark.session import Session
 import openai
+from openai.error import RateLimitError 
 
 # -------------------------------
 # Create Snowpark Session Manually
@@ -134,6 +135,7 @@ if st.button("Ask"):
         prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
         answer = ask_openai(prompt)
         st.write(answer)
+
 
 
 
