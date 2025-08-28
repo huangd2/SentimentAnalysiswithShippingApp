@@ -117,7 +117,7 @@ st.subheader("Ask Questions About Your Data")
 user_question = st.text_input("Enter your question here:")
 
 if user_question:
-    prompt = f"Answer this question using the dataset: {user_question} <context>{df_filtered.to_string(index=False)}</context>"
+    prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
 
     response = openai.chat.completions.create(
         model="gpt-4o",   # or another available model
@@ -128,6 +128,7 @@ if user_question:
     )
 
     st.write(response.choices[0].message.content)
+
 
 
 
