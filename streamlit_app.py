@@ -127,7 +127,7 @@ def ask_openai(prompt):
             max_tokens=500
         )
         return response.choices[0].message.content
-    except openai.error.OpenAIError as e:
+    except Exception as e:  # catch all OpenAI errors
         return f"OpenAI API error: {e}"
 
 if st.button("Ask"):
@@ -135,6 +135,8 @@ if st.button("Ask"):
         prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
         answer = ask_openai(prompt)
         st.write(answer)
+
+
 
 
 
