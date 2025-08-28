@@ -116,19 +116,24 @@ if all(col in filtered_df.columns for col in ["REGION","PRODUCT","STATUS","SENTI
 st.subheader("Ask Questions About Your Data")
 user_question = st.text_input("Enter your question here:")
 
-if user_question:
-    prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
+# Use caching to avoid repeated API calls for same prompt
+@st.cache_data(show_spinner=False)
+def ask_openai(prompt):
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
+        )
+        return response.choices[0].message.content
+    except RateLimitError:
+        return "Rate limit exceeded. Please wait a few seconds and try again."
 
-    response = openai.chat.completions.create(
-        model="gpt-4o",   # or another available model
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=500
-    )
-
-    st.write(response.choices[0].message.content)
-
+if st.button("Ask"):
+    if user_question:
+        prompt = f"Answer this question using the dataset: {user_question} <context>{filtered_df.to_string(index=False)}</context>"
+        answer = ask_openai(prompt)
+        st.write(answer)
 
 
 
